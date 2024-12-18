@@ -1,6 +1,9 @@
 use bevy::{
     app::{App, Startup, Update},
-    prelude::{Commands, Transform},
+    color::Color,
+    math::Vec2,
+    prelude::{Camera2d, Commands, Transform},
+    sprite::Sprite,
     DefaultPlugins,
 };
 
@@ -19,7 +22,13 @@ fn main() {
 }
 
 fn spawn_def(mut commands: Commands) {
+    commands.spawn(Camera2d::default());
     commands.spawn((
+        Sprite {
+            custom_size: Some(Vec2::new(50.0, 50.0)),
+            color: Color::linear_rgb(100.0, 100.0, 100.0),
+            ..Default::default()
+        },
         Enemy {
             state: EnemyState::PATROL,
         },
