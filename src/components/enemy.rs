@@ -1,10 +1,10 @@
 use bevy::prelude::Component;
 
 pub enum EnemyState {
-    PATROL,
     CHASE,
-    FLANK,
     ENGAGE,
+    FLANK,
+    PATROL,
     RETREAT,
 }
 

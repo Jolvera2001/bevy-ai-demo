@@ -1,11 +1,12 @@
 use bevy::{
-    app::{App, Startup, Update},
+    app::{App, PluginGroup, Startup, Update},
+    asset::AssetServer,
     color::Color,
-    math::{Vec2, Vec3},
-    pbr::PointLight,
+    image::Image,
+    math::Vec2,
     prelude::{
-        Camera3d, Commands, PerspectiveProjection, Projection,
-        Transform,
+        Camera2d, Camera2dBundle, Commands, ImagePlugin, OrthographicProjection,
+        PerspectiveProjection, Res, Transform,
     },
     sprite::Sprite,
     DefaultPlugins,
@@ -15,35 +16,34 @@ mod components;
 mod systems;
 
 use components::enemy::{Enemy, EnemyState, Patrol};
+use components::game::GameState;
 use systems::enemy::enemy_state_machine;
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)
+        .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
+        .insert_resource(GameState {
+            time: 0.00,
+            score: 0,
+            level: 0,
+            game_over: false,
+            title: true,
+        })
         .add_systems(Startup, spawn_def)
         .add_systems(Update, enemy_state_machine)
         .run();
 }
 
-fn spawn_def(mut commands: Commands) {
-    commands.spawn((
-        Camera3d::default(),
-        Projection::Perspective(PerspectiveProjection::default()),
-        Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
-    ));
-    commands.spawn((
-        PointLight {
-            color: Color::WHITE,
-            intensity: 1500.0,
-            shadows_enabled: true,
-            ..Default::default()
-        },
-        Transform::from_xyz(4.0, 8.0, 4.0),
-    ));
+fn spawn_def(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.spawn(Camera2d::default());
+
+    let enemy_texture = asset_server.load::<Image>("sprites/red-block.png");
+
     commands.spawn((
         Sprite {
-            color: Color::srgb(1.0, 0.5, 0.5),
-            custom_size: Some(Vec2::new(20.0, 20.0)),
+            image: enemy_texture,
+            color: Color::WHITE,
+            custom_size: Some(Vec2::new(50.0, 50.0)),
             ..Default::default()
         },
         Enemy {
