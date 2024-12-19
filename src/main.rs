@@ -15,7 +15,7 @@ use bevy::{
 mod components;
 mod systems;
 
-use components::enemy::{Enemy, EnemyState, Patrol};
+use components::enemy::{Enemy, EnemyState, Patrol, Role};
 use components::game::GameState;
 use systems::enemy::enemy_state_machine;
 
@@ -47,6 +47,7 @@ fn spawn_def(mut commands: Commands, asset_server: Res<AssetServer>) {
             ..Default::default()
         },
         Enemy {
+            role: Role::ENGAGER,
             state: EnemyState::PATROL,
         },
         Patrol { point: (0.0, 0.0) },
