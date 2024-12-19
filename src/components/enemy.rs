@@ -1,5 +1,6 @@
 use bevy::prelude::Component;
 
+#[derive(PartialEq, Eq)]
 pub enum EnemyState {
     CHASE,
     ENGAGE,
@@ -8,9 +9,16 @@ pub enum EnemyState {
     RETREAT,
 }
 
+#[derive(PartialEq, Eq)]
+pub enum Role {
+    FLANKER,
+    ENGAGER,
+}
+
 #[derive(Component)]
 pub struct Enemy {
     pub state: EnemyState,
+    pub role: Role,
 }
 
 #[derive(Component)]

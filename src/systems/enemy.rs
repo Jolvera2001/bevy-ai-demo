@@ -4,7 +4,7 @@ use bevy::{
 };
 use rand::prelude::*;
 
-use crate::components::enemy::{Enemy, EnemyState, Patrol};
+use crate::components::enemy::{Enemy, EnemyState, Patrol, Role};
 
 pub fn enemy_state_machine(
     mut query: Query<(&mut Patrol, &mut Enemy, &mut Transform)>,
@@ -15,7 +15,35 @@ pub fn enemy_state_machine(
         return;
     };
 
-    for (mut patrol, enemy, mut transform) in query.iter_mut() {
+    for (mut patrol, mut enemy, mut transform) in query.iter_mut() {
+        // Arbitrary number for now
+        const DISTANCE_TO_PLAYER: f32 = 0.0;
+
+        const RETREAT_DISTANCE: f32 = 50.0;
+        const ENGAGE_DISTANCE: f32 = 150.0;
+        const OPTIMAL_DISTANCE: f32 = 125.0;
+        const ENGAGE_RANGE: f32 = 20.0;
+        const RETREAT_BUFFER: f32 = 90.0;
+
+        // state machine
+        if enemy.state == EnemyState::RETREAT && DISTANCE_TO_PLAYER < RETREAT_BUFFER {
+            enemy.state = EnemyState::RETREAT;
+        } else if DISTANCE_TO_PLAYER < RETREAT_DISTANCE {
+            enemy.state = EnemyState::RETREAT;
+        } else if (DISTANCE_TO_PLAYER - OPTIMAL_DISTANCE).abs() < ENGAGE_RANGE {
+            enemy.state = EnemyState::ENGAGE;
+        } else if DISTANCE_TO_PLAYER < ENGAGE_DISTANCE {
+            if enemy.role == Role::FLANKER {
+                enemy.state = EnemyState::FLANK;
+            } else {
+                enemy.state = EnemyState::CHASE;
+            }
+        }
+        {
+            enemy.state = EnemyState::PATROL;
+        }
+
+        // behaviors
         match enemy.state {
             EnemyState::PATROL => {
                 if (transform.translation.x - patrol.point.0).abs() < 1.0
@@ -41,6 +69,10 @@ pub fn enemy_state_machine(
                     transform.translation.y += direction.1 * speed;
                 }
             }
+            EnemyState::RETREAT => {},
+            EnemyState::ENGAGE => {},
+            EnemyState::CHASE => {},
+            EnemyState::FLANK => {},
             _ => (),
         }
     }
