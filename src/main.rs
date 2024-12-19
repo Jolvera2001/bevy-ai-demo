@@ -5,8 +5,7 @@ use bevy::{
     image::Image,
     math::Vec2,
     prelude::{
-        Camera2d, Camera2dBundle, Commands, ImagePlugin, OrthographicProjection,
-        PerspectiveProjection, Res, Transform,
+        Camera2d, Commands, ImagePlugin, Res, Transform,
     },
     sprite::Sprite,
     DefaultPlugins,

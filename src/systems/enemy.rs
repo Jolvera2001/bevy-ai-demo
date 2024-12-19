@@ -1,8 +1,7 @@
 use std::f32::consts::PI;
 
 use bevy::{
-    math,
-    prelude::{Query, Transform, With},
+    prelude::{ParamSet, Query, Transform, With},
     window::Window,
 };
 use rand::prelude::*;
@@ -13,9 +12,11 @@ use crate::components::{
 };
 
 pub fn enemy_state_machine(
-    mut query: Query<(&mut Patrol, &mut Enemy, &mut Transform)>,
+    mut query_set: ParamSet<(
+        Query<(&mut Patrol, &mut Enemy, &mut Transform)>,
+        Query<&Transform, With<Player>>,
+    )>,
     window: Query<&Window>,
-    player: Query<&Transform, With<Player>>,
 ) {
     // accessing window size
     let Ok(window) = window.get_single() else {
@@ -23,12 +24,15 @@ pub fn enemy_state_machine(
     };
 
     // accessing player
-    let Ok(player_transform) = player.get_single() else {
-        return;
+    let player_pos = {
+        let player_query = query_set.p1();
+        let Ok(player_transform) = player_query.get_single() else {
+            return;
+        };
+        player_transform.translation
     };
-    let player_pos = player_transform.translation;
 
-    for (mut patrol, mut enemy, mut transform) in query.iter_mut() {
+    for (mut patrol, mut enemy, mut transform) in query_set.p0().iter_mut() {
         // math.sqrt((self.x - px) ** 2 + (self.y - py) ** 2)
         // apperently this is less overhead? I wouldn't need to use
         // .powf(2.0)
