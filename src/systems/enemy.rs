@@ -15,7 +15,7 @@ pub fn enemy_state_machine(
         return;
     };
 
-    for (mut patrol, mut enemy, mut transform) in query.iter_mut() {
+    for (mut patrol, enemy, mut transform) in query.iter_mut() {
         match enemy.state {
             EnemyState::PATROL => {
                 if (transform.translation.x - patrol.point.0).abs() < 1.0
