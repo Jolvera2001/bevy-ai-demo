@@ -1,6 +1,7 @@
 use bevy::prelude::Component;
+use strum_macros::Display;
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Debug, Display)]
 pub enum EnemyState {
     CHASE,
     ENGAGE,
@@ -14,6 +15,9 @@ pub enum Role {
     FLANKER,
     ENGAGER,
 }
+
+#[derive(Component)]
+pub struct EnemyStatus;
 
 #[derive(Component)]
 pub struct Enemy {

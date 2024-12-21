@@ -1,21 +1,21 @@
-use std::f32::consts::PI;
+use std::{f32::consts::PI, fmt::Write};
 
 use bevy::{
-    prelude::{ParamSet, Query, Transform, With},
-    window::Window,
+    prelude::{Children, ParamSet, Query, Text, Transform, With}, reflect::Reflect, text::{Text2d, TextSpan, TextSpanAccess}, window::Window
 };
 use rand::prelude::*;
 
 use crate::components::{
-    enemy::{Enemy, EnemyState, Patrol, Role},
+    enemy::{Enemy, EnemyState, EnemyStatus, Patrol, Role},
     player::Player,
 };
 
 pub fn enemy_state_machine(
     mut query_set: ParamSet<(
-        Query<(&mut Patrol, &mut Enemy, &mut Transform)>,
+        Query<(&mut Patrol, &mut Enemy, &mut Transform, &Children)>,
         Query<&Transform, With<Player>>,
     )>,
+    mut text_query: Query<&mut Text2d, With<EnemyStatus>>,
     window: Query<&Window>,
 ) {
     // accessing window size
@@ -32,7 +32,7 @@ pub fn enemy_state_machine(
         player_transform.translation
     };
 
-    for (mut patrol, mut enemy, mut transform) in query_set.p0().iter_mut() {
+    for (mut patrol, mut enemy, mut transform, children) in query_set.p0().iter_mut() {
         // math.sqrt((self.x - px) ** 2 + (self.y - py) ** 2)
         // apperently this is less overhead? I wouldn't need to use
         // .powf(2.0)
@@ -40,29 +40,33 @@ pub fn enemy_state_machine(
         let dy = transform.translation.y - player_pos.y;
         let distance_to_player = (dx * dx + dy * dy).sqrt();
 
-        const RETREAT_DISTANCE: f32 = 50.0;
-        const ENGAGE_DISTANCE: f32 = 150.0;
-        const OPTIMAL_DISTANCE: f32 = 125.0;
+        const RETREAT_DISTANCE: f32 = 80.0;
+        const CHASE_DISTANCE: f32 = 280.0;
+        const OPTIMAL_DISTANCE: f32 = 100.0;
         const ENGAGE_RANGE: f32 = 20.0;
-        const RETREAT_BUFFER: f32 = 90.0;
-        const SPEED: f32 = 2.0;
+        const RETREAT_BUFFER: f32 = 125.0;
+        const SPEED: f32 = 1.75;
 
         // state machine
-        if enemy.state == EnemyState::RETREAT && distance_to_player < RETREAT_BUFFER {
-            enemy.state = EnemyState::RETREAT;
-        } else if distance_to_player < RETREAT_DISTANCE {
+        if (distance_to_player < RETREAT_DISTANCE) || (enemy.state == EnemyState::RETREAT && distance_to_player < RETREAT_BUFFER) {
             enemy.state = EnemyState::RETREAT;
         } else if (distance_to_player - OPTIMAL_DISTANCE).abs() < ENGAGE_RANGE {
             enemy.state = EnemyState::ENGAGE;
-        } else if distance_to_player < ENGAGE_DISTANCE {
+        } else if distance_to_player < CHASE_DISTANCE {
             if enemy.role == Role::FLANKER {
                 enemy.state = EnemyState::FLANK;
             } else {
                 enemy.state = EnemyState::CHASE;
             }
-        }
-        {
+        } else {
             enemy.state = EnemyState::PATROL;
+        }
+
+        for child in children.iter() {
+            if let Ok(mut text) = text_query.get_mut(*child) {
+                text.write_span().clear();
+                write!(text.write_span(), "{}", enemy.state).unwrap();
+            }     
         }
 
         // behaviors
@@ -78,8 +82,6 @@ pub fn enemy_state_machine(
                 } else {
                     let dx = patrol.point.0 - transform.translation.x;
                     let dy = patrol.point.1 - transform.translation.y;
-
-                    let speed = 2.0;
 
                     // (a^2 + b^2 = c^2)
                     let distance = (dx * dx + dy * dy).sqrt();

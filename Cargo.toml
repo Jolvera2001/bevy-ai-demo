@@ -6,3 +6,5 @@ edition = "2021"
 [dependencies]
 bevy = "0.15.0"
 rand = "0.8.5"
+strum = "0.26.3"
+strum_macros = "0.26.3"
